@@ -20,10 +20,10 @@ module Api
       end
 
       def show
-        if @challenge
-          render json: @challenge
-        else
+        if @challenge.nil?
           render json: { message: "Challenge not found" }, status: :not_found
+        else
+          render json: @challenge
         end
       end
 
