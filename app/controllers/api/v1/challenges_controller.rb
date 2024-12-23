@@ -1,16 +1,16 @@
 module Api
   module V1
     class ChallengesController < ApplicationController
-      before_action :authenticate_user!, only: [ :update, :destroy, :create]
-      before_action :authorize_admin , only: [ :update, :destroy, :create]
-      before_action :set_challenge , only: [ :update, :destroy, :show]
+      before_action :authenticate_user!, only: [:update, :destroy, :create,:current_user_info]
+      before_action :authorize_admin, only: [:update, :destroy, :create]
+      before_action :set_challenge, only: [:update, :destroy, :show]
+
       def index
         @challenges = Challenge.all
         render json: @challenges
       end
 
       def create
-        # challenge = Challenge.new(challenges_params.merge(user_id: current_user.id))
         @challenge = current_user.challenges.build(challenges_params)
         if @challenge.save
           render json: { message: "Challenge successfully created", data: @challenge }, status: :created
@@ -28,7 +28,6 @@ module Api
       end
 
       def update
-        # @challenge = current_user.challenges.find(params[:id])
         if @challenge.update(challenges_params)
           render json: { message: "Challenge successfully updated", data: @challenge }, status: :ok
         else
@@ -45,7 +44,21 @@ module Api
         end
       end
 
+      def active_and_upcoming
+        @active_challenges = Challenge.active_challenges
+        @upcoming_challenges = Challenge.upcoming_challenges
+        render json: { active_challenges: @active_challenges, upcoming_challenges: @upcoming_challenges }
+      end
+
+      def current_user_info
+        if current_user
+          render json: { user: current_user }
+        else
+          render json: { message: "User not found" }, status: :not_found
+        end
+        end
       private
+
       def authorize_admin
         admin_emails = ENV['ADMIN_EMAILS']&.split(',') || []
         unless admin_emails.include?(current_user.email)
@@ -53,10 +66,10 @@ module Api
         end
       end
 
-
       def set_challenge
         @challenge = Challenge.find(params[:id])
       end
+
       def challenges_params
         params.require(:challenge).permit(:title, :description, :start_date, :end_date)
       end

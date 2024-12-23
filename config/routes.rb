@@ -16,10 +16,14 @@ Rails.application.routes.draw do
   # API Routes under version 1
   namespace :api do
     namespace :v1 do
-      resources :challenges
+      resources :challenges do
+        collection do
+          get :active_and_upcoming
+          get :current_user_info
+        end
+      end
     end
   end
-
   # Define the root path (optional)
   # root "posts#index"
 end
